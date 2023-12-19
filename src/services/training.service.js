@@ -12,7 +12,7 @@ const getTrainingSession = async (startDateTime, endDateTime) => {
   } catch (error) {
     console.error(error);
     const errorMessage = 'Internal Server Error';
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ error: errorMessage });
+    return {err: error.message}
   }
 };
 ;
@@ -25,12 +25,6 @@ const filters = {
   // Add more filters as needed
 };
 
-try {
-  const trainingSessions = await getTrainingSession(filters);
-  console.log(trainingSessions);
-} catch (error) {
-  console.error(error);
-}
 
 
 const saveTrainingSession=async(data)=>{

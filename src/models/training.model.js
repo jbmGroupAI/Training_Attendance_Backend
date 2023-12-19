@@ -2,16 +2,17 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const trainingSchema = new Schema({
-  fromTime: {
-    type: String,
-    required: true,
-  },
+  
   projectName: {
     type: String,
     required: true,
   },
   selectedDate: {
     type: Date,
+    required: true,
+  },
+  fromTime: {
+    type: String,
     required: true,
   },
   toTime: {
@@ -26,6 +27,10 @@ const trainingSchema = new Schema({
     type: String,
     required: true,
   },
+  plantCode: {
+    type: String,
+    required: true,
+  }
 });
 
 const TrainingModel = mongoose.model('Training', trainingSchema);
