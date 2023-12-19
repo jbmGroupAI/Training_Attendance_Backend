@@ -6,7 +6,7 @@ const Training = require('../models/training.model')
 const getTrainingSession = async (startDateTime, endDateTime) => {
   try {
     const filteredSessions = await Training.find({
-      selectedDate: { $gte: startDateTime, $lte: endDateTime },
+      date: { $gte: startDateTime, $lte: endDateTime },
     });
     return filteredSessions;
   } catch (error) {

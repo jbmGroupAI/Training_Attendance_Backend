@@ -7,7 +7,7 @@ const trainingSchema = new Schema({
     type: String,
     required: true,
   },
-  selectedDate: {
+  date: {
     type: Date,
     required: true,
   },

@@ -6,8 +6,8 @@ const getTrainingSession = catchAsync(async (req, res) => {
   const { startDate, startTime, endDate, endTime } = req.query;
 
   // Convert date and time strings to Date objects
-  const startDateTime = new Date(`${startDate}T${startTime}`);
-  const endDateTime = new Date(`${endDate}T${endTime}`);
+  const startDateTime = new Date(startDate);
+  const endDateTime = new Date(endDate);
   const resp = await trainingService.getTrainingSession(startDateTime, endDateTime);
   res.status(httpStatus.OK).send(resp);
 });
