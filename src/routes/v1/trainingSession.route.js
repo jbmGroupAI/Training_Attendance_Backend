@@ -8,6 +8,8 @@ const router = express.Router();
 
 router.get('/', trainingController.getTrainingSession);
 router.post('/',  trainingController.saveTrainingSession);
+router.put('/:id', trainingController.editTrainingSession);
+router.delete('/:id',  trainingController.deleteTrainingSession);
 
 
 module.exports = router;

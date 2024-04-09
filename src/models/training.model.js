@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const trainingSchema = new Schema({
-  
   projectName: {
     type: String,
     required: true,
@@ -23,14 +22,26 @@ const trainingSchema = new Schema({
     type: String,
     required: true,
   },
-  venue: {
+  // venue: {
+  //   type: String,
+  //   required: true,
+  // },
+  plantName: {
     type: String,
     required: true,
   },
-  plantCode: {
+  plantId: {
     type: String,
     required: true,
-  }
+  },
+  empCodes: {
+    type: Array,
+    required: true,
+  },
+  // plantCode:{
+  //   type: String,
+  //   required: true,
+  // },
 });
 
 const TrainingModel = mongoose.model('Training', trainingSchema);
