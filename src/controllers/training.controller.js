@@ -2,6 +2,7 @@ const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const { authService, userService, tokenService, emailService } = require('../services/training.service.js');
 const trainingService = require('../services/training.service');
+
 const getTrainingSession = catchAsync(async (req, res) => {
   const { startDate, startTime, endDate, endTime } = req.query;
 
@@ -32,9 +33,11 @@ const deleteTrainingSession = catchAsync(async (req, res) => {
   res.send(resp);
 });
 
+
 module.exports = {
   getTrainingSession,
   saveTrainingSession,
   editTrainingSession,
-  deleteTrainingSession
+  deleteTrainingSession,
+  
 };
