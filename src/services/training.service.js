@@ -3,6 +3,44 @@ const ApiError = require('../utils/ApiError');
 const Employee = require('../models/employee.model')
 const { tokenTypes } = require('../config/tokens');
 const Training = require('../models/training.model')
+const FinalData = require('../models/finalTrainingData.model')
+const {sendEmail} = require('./email.service')
+
+
+
+const calculateMeetingDuration = (fromTime, toTime) => {
+  const fromTimeParts = fromTime.split(':');
+  const toTimeParts = toTime.split(':');
+
+  const fromTimeInMinutes = parseInt(fromTimeParts[0]) * 60 + parseInt(fromTimeParts[1]);
+  const toTimeInMinutes = parseInt(toTimeParts[0]) * 60 + parseInt(toTimeParts[1]);
+
+  const durationInMinutes = toTimeInMinutes - fromTimeInMinutes;
+
+  const hours = Math.floor(durationInMinutes / 60);
+  const minutes = durationInMinutes % 60;
+
+  return `${hours}h ${minutes}m`;
+};
+
+const meetingStatus = (row) => {
+  const currentTime = new Date();
+  const meetingStartDate = new Date(row.date);
+  const meetingStartTimeParts = row.fromTime.split(":");
+  meetingStartDate.setHours(parseInt(meetingStartTimeParts[0]), parseInt(meetingStartTimeParts[1]), 0, 0);
+
+  const meetingEndDate = new Date(row.date);
+  const meetingEndTimeParts = row.toTime.split(":");
+  meetingEndDate.setHours(parseInt(meetingEndTimeParts[0]), parseInt(meetingEndTimeParts[1]), 0, 0);
+
+  if (currentTime > meetingEndDate) {
+    return "Completed";
+  } else if (currentTime >= meetingStartDate) {
+    return "Running";
+  } else {
+    return "Not Started";
+  }
+}
 
 const getTrainingSession = async (startDateTime, endDateTime) => {
   try {
@@ -10,8 +48,16 @@ const getTrainingSession = async (startDateTime, endDateTime) => {
     const filteredSessions = await Training.find({
       date: { $gte: startDateTime, $lte: endDateTime },
     });
-    console.log("filter", filter)
-    return filteredSessions;
+    let res = filteredSessions.map(resp => {
+      resp = resp.toObject();
+      resp.totalMeetingTime = calculateMeetingDuration(resp.fromTime, resp.toTime)
+      resp.status = meetingStatus(resp)
+      return resp
+    })
+    // console.log("filter", filter)
+    console.log('hhg',res)
+    return res;
+    
   } catch (error) {
     console.error(error);
     const errorMessage = 'Internal Server Error';
@@ -32,7 +78,7 @@ const filters = {
 
 const saveTrainingSession = async (data) => {
   const trainingObj = new Training({ ...data });
-  const empArray =data?.empCodes;
+  const empArray = data?.empCodes;
   // const empArray = [
   //   'shashank - 39973',
   //   'pranjal - 40518',
@@ -40,23 +86,23 @@ const saveTrainingSession = async (data) => {
   //   'vikas - 40455'
   // ];
   let res = await trainingObj.save();
-  console.log("xcvbnm,",res)
+  console.log("xcvbnm,", res)
 
-  const trainingId= res._id;
+  const trainingId = res._id;
   for (let i = 0; i < empArray.length; i++) {
     const emp = empArray[i];
     // Split the string by ' - ' to separate the empName and empId
     const [empName, empId] = emp.split(' - ');
-    
+
     // Extract the last 5 digits as empId and trim whitespace
     const last5Digits = Number(empId.trim().slice(-5));
-    
+
     // Trim whitespace from empName
     const trimmedEmpName = empName.trim();
-    
+
     // Find the employee by employeeId
     const existingEmployee = await Employee.findOne({ employeeId: last5Digits });
-    
+
     if (existingEmployee) {
       // If employee is found, update the trainingId array with the new trainingId
       await Employee.findOneAndUpdate(
@@ -73,20 +119,20 @@ const saveTrainingSession = async (data) => {
     }
   }
 
-  
- 
-  
-  
+
+
+
+
   return res;
 }
 const editTrainingSession = async (id, data) => {
   try {
     // Update the training session document with the provided data
-    console.log("hello",id, data)
+    console.log("hello", id, data)
     // let data1 = await Training.findOne({_id:id})
     // console.log("bye", data1)
     // const updatedTraining = await Training.findByIdAndUpdate(id, data, { new: true });
-    const updatedTraining = await Training.findOneAndUpdate({_id:id}, {$set:data});
+    const updatedTraining = await Training.findOneAndUpdate({ _id: id }, { $set: data });
     console.log("updated", updatedTraining)
     // Return the updated training session document
     return updatedTraining;
@@ -111,9 +157,88 @@ const deleteTrainingSession = async (id) => {
     throw new Error('Failed to edit training session');
   }
 };
+
+const completeTrainingSession = async (data) => {
+  try {
+    if (!data) {
+      throw new Error("Data is undefined or null");
+    }
+  console.log('first',data)
+    // Remove _id field from the data
+    delete data._id;
+
+    // Remove _id field from each employee object in allEmployees array
+    data.allEmployees = data.allEmployees.map(employee => {
+      if (employee && employee._id) {
+        delete employee._id;
+      }
+      return employee;
+    });
+
+    // Create a new FinalData object with the sanitized data
+    const finalDataObj = new FinalData(data);
+
+    console.log('hkhjkhk',FinalData,data)
+
+    // Save the new object to the database
+    let x=await finalDataObj.save();
+    console.log("dfghjkl;", x)
+    sendEmail(x.facultyMail,`Training Session Details`,`http://localhost:3000/table/${x._id}`)
+
+    console.log("Training session completed successfully:", finalDataObj);
+  } catch (error) {
+    console.error("Error completing training session:", error);
+    throw new Error("Error completing training session");
+  }
+};
+
+
+const getFinalTrainingSession = async (startDate,endDate,id) => {
+  try {
+    // Query the database to retrieve training sessions between the specified dates
+    const trainingSessions = await FinalData.findOne({_id:id
+      // date: {
+      //   $gte: new Date(startDate),
+      //   $lte: new Date(endDate)
+      // }
+    });
+    return trainingSessions;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error retrieving training sessions by date range');
+  }
+
+};
+
+const acknowledge = async (data,id) => {
+  try {
+    // Query the database to retrieve training sessions between the specified dates
+    const trainingSessions = await FinalData.findOneAndUpdate({_id:id
+      // date: {
+      //   $gte: new Date(startDate),
+      //   $lte: new Date(endDate)
+      // }
+    }, {$set:data});
+    console.log("kjhgfd", trainingSessions)
+    return trainingSessions;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error retrieving training sessions by date range');
+  }
+
+};
+
+
+
+
+
+
 module.exports = {
   getTrainingSession,
   saveTrainingSession,
   editTrainingSession,
-  deleteTrainingSession
+  deleteTrainingSession,
+  completeTrainingSession,
+  getFinalTrainingSession,
+  acknowledge
 };

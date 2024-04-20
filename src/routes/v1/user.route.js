@@ -4,7 +4,7 @@ const validate = require('../../middlewares/validate');
 const userValidation = require('../../validations/user.validation');
 const userController = require('../../controllers/user.controller');
 
-const router = express.Router();
+const   router = express.Router();
 
 router
   .route('/')
