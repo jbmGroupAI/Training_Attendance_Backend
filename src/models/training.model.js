@@ -86,6 +86,10 @@ const trainingSchema = new Schema({
     type: Array,
     required: true,
   },
+  acknowledgement:{
+    type:Boolean,
+    default:false
+  }
 });
 
 const TrainingModel = mongoose.model('Training', trainingSchema);

@@ -1,3 +1,4 @@
+
 // const mongoose = require('mongoose');
 // const { Schema } = mongoose;
 
@@ -140,6 +141,10 @@ const trainingSchema = new Schema({
     type: Array,
     required: true,
   },
+  meetingId: {
+    type: String,
+    required: true
+  },
   allEmployees: {
     type: [{
       empOnlyId: {
@@ -166,12 +171,16 @@ const trainingSchema = new Schema({
         type: Array,
         required: true,
       },
-      acknowledgement:{
+      acknowledgement: {
         type: Boolean,
         default: true
       }
     }],
     required: true
+  },
+  acknowledgement:{
+    type:Boolean,
+    default:false
   }
 });
 

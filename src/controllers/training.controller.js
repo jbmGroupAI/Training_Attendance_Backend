@@ -21,13 +21,32 @@ const saveTrainingSession = catchAsync(async (req, res) => {
   const resp = await trainingService.saveTrainingSession(req.body);
   res.send(resp);
 });
-const editTrainingSession = catchAsync(async (req, res) => {
+// const editTrainingSession = catchAsync(async (req, res) => {
   
-  let id= req.params.id;
-  console.log(id)
-  const resp = await trainingService.editTrainingSession(id,req.body);
-  res.send(resp);
+//   let id= req.params.id;
+//   console.log(id)
+//   const resp = await trainingService.editTrainingSession(id,req.body);
+//   res.send(resp);
+// });
+
+const editTrainingSession = catchAsync(async (req, res) => {
+  try {
+    const id = req.params.id;
+    console.log("Editing training session with ID:", id);
+    
+    // Call the editTrainingSession function from the trainingService module
+    const resp = await trainingService.editTrainingSession(id, req.body);
+    
+    // Send the response
+    res.send(resp);
+  } catch (error) {
+    // Handle errors
+    console.error('Error editing training session:', error);
+    res.status(500).json({ message: 'Failed to edit training session' });
+  }
 });
+
+
 const deleteTrainingSession = catchAsync(async (req, res) => {
   let id= req.params.id;
   console.log("fghjk", id)
@@ -44,8 +63,12 @@ const getFinalTrainingSession = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const {id}= req.params;
+    let {meetingId}= req.query
+    let filter={}
+    if(id){filter._id=id}
+    if(meetingId){filter.meetingId=meetingId}
     
-    const trainingSessions = await trainingService.getFinalTrainingSession(startDate, endDate,id);
+    const trainingSessions = await trainingService.getFinalTrainingSession(filter);
 
     if (!trainingSessions || trainingSessions.length === 0) {
       return res.status(404).json({ error: 'No training sessions found' });

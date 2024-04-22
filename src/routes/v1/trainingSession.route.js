@@ -11,6 +11,7 @@ router.post('/',  trainingController.saveTrainingSession);
 router.put('/:id', trainingController.editTrainingSession);
 router.delete('/:id',  trainingController.deleteTrainingSession);
 router.post('/complete',trainingController.completeTrainingSession)
+router.get('/final', trainingController.getFinalTrainingSession);
 router.get('/final/:id', trainingController.getFinalTrainingSession);
 router.post('/acknowledge/:id', trainingController.acknowledge)
 module.exports = router;

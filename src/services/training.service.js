@@ -126,9 +126,11 @@ const saveTrainingSession = async (data) => {
   return res;
 }
 const editTrainingSession = async (id, data) => {
+  console.log("hello", id, data)
+ 
   try {
     // Update the training session document with the provided data
-    console.log("hello", id, data)
+   
     // let data1 = await Training.findOne({_id:id})
     // console.log("bye", data1)
     // const updatedTraining = await Training.findByIdAndUpdate(id, data, { new: true });
@@ -165,27 +167,39 @@ const completeTrainingSession = async (data) => {
     }
   console.log('first',data)
     // Remove _id field from the data
+    let meetingId=data._id
     delete data._id;
 
     // Remove _id field from each employee object in allEmployees array
-    data.allEmployees = data.allEmployees.map(employee => {
+    data.allEmployees = data?.allEmployees?.map(employee => {
       if (employee && employee._id) {
         delete employee._id;
       }
       return employee;
     });
-
+    data.meetingId=meetingId;
     // Create a new FinalData object with the sanitized data
-    const finalDataObj = new FinalData(data);
+    let training= await FinalData.findOne({meetingId})
+    let finalDataObj;
+    if(training)
+    {
+      console.log("updated")
+      finalDataObj = await FinalData.findOneAndUpdate({_id:training.id},{$set:data},{new:true})
+    }
+    else
+    {
+      console.log("created")
+    finalDataObj = new FinalData(data);
+    training= await finalDataObj.save()
+    }
 
-    console.log('hkhjkhk',FinalData,data)
+    
 
     // Save the new object to the database
-    let x=await finalDataObj.save();
-    console.log("dfghjkl;", x)
-    sendEmail(x.facultyMail,`Training Session Details`,`http://localhost:3000/table/${x._id}`)
+    
+    sendEmail(training.facultyMail,`Training Session Details`,`http://localhost:3000/table/${training._id}`)
 
-    console.log("Training session completed successfully:", finalDataObj);
+    console.log("Training session completed successfully:",finalDataObj, training );
   } catch (error) {
     console.error("Error completing training session:", error);
     throw new Error("Error completing training session");
@@ -193,15 +207,10 @@ const completeTrainingSession = async (data) => {
 };
 
 
-const getFinalTrainingSession = async (startDate,endDate,id) => {
+const getFinalTrainingSession = async (filter) => {
   try {
     // Query the database to retrieve training sessions between the specified dates
-    const trainingSessions = await FinalData.findOne({_id:id
-      // date: {
-      //   $gte: new Date(startDate),
-      //   $lte: new Date(endDate)
-      // }
-    });
+    const trainingSessions = await FinalData.findOne(filter);
     return trainingSessions;
   } catch (error) {
     console.error(error);
@@ -212,7 +221,9 @@ const getFinalTrainingSession = async (startDate,endDate,id) => {
 
 const acknowledge = async (data,id) => {
   try {
+    data.acknowledgement= true;
     // Query the database to retrieve training sessions between the specified dates
+    const training = await Training.findOneAndUpdate({_id:data.meetingId},{$set:{acknowledgement:true}})
     const trainingSessions = await FinalData.findOneAndUpdate({_id:id
       // date: {
       //   $gte: new Date(startDate),
