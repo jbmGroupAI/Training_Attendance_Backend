@@ -137,6 +137,7 @@ const trainingSchema = new Schema({
     type: String,
     required: true,
   },
+  
   empCodes: {
     type: Array,
     required: true,
