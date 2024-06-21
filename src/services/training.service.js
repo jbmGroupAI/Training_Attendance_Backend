@@ -27,7 +27,7 @@ const meetingStatus = async (row) => {
   return new Promise(async (resolve, reject) => {
     try {
       let training = await Training.findOne({ _id: row._id });
-      if (training?.completed === true) {
+      if (training?.acknowledgement === true) {
         resolve("Completed");
       } else {
         const currentTime = new Date();
@@ -95,83 +95,104 @@ const filters = {
   trainerName: 'John Doe',
 };
 
-// const getTrainingSession = async (startDateTime, endDateTime) => {
-//   try {
-//     const filter = { date: { $gte: startDateTime, $lte: endDateTime } }
-//     const filteredSessions = await Training.find({
-//       date: { $gte: startDateTime, $lte: endDateTime },
-//     });
-//     let res = filteredSessions.map(resp => {
-//       resp = resp.toObject();
-//       resp.totalMeetingTime = calculateMeetingDuration(resp.fromTime, resp.toTime);
-//       return resp;
-//     });
-
-//     console.log('hhg', res)
-//     return res;
-
-//   } catch (error) {
-//     console.error(error);
-//     const errorMessage = 'Internal Server Error';
-//     return { err: error.message }
-//   }
-// };
-
-// const filters = {
-//   startDate: '2023-12-01',
-//   endDate: '2023-12-15',
-//   trainerName: 'John Doe',
-// };
-
-
-
 
 const saveTrainingSession = async (data) => {
-  const trainingObj = new Training({ ...data });
-  const empArray = data?.empCodes;
+  try {
+    const trainingObj = new Training({ ...data });
+    const empArray = data?.empCodes;
 
-  let res = await trainingObj.save();
-  console.log("xcvbnm,", res)
+    // Save the training session
+    let res = await trainingObj.save();
+    console.log("xcvbnm,", empArray);
 
-  const trainingId = res._id;
-  for (let i = 0; i < empArray.length; i++) {
-    const emp = empArray[i];
-    const [empName, empId] = emp.split(' - ');
+    const trainingId = res._id;
 
-    const last5Digits = Number(empId.trim().slice(-5));
-
-    const trimmedEmpName = empName.trim();
-
-    const existingEmployee = await Employee.findOne({ employeeId: last5Digits });
-
-    if (existingEmployee) {
-      await Employee.findOneAndUpdate(
-        { employeeId: last5Digits },
-        { $push: { trainingId: trainingId } }
-      );
-    } else {
-      await Employee.create({
-        employeeId: last5Digits,
-        employeeName: trimmedEmpName,
-        trainingId: [trainingId]
-      });
+    // Send email to each participant
+    for (let i = 0; i < empArray.length; i++) {
+      const participantEmail = data.participantEmails[i]; // Assuming participant emails are in the same order as empCodes
+      // Your logic to send email to participant using participantEmail
+       sendEmail(participantEmail, `Training Session Created`, `You have been invited to a training session. Details: 
+        Training Topic: ${data.projectName}
+        Trainer: ${data.trainerName}
+        Date: ${data.date}
+        From Time: ${data.fromTime}
+        To Time: ${data.toTime}
+        Venue: ${data.plantNames}
+        Description: ${data.meetingDescription}
+        TrainingLink: ${data.trainingLink}
+       `);
     }
+    // Update Employee collection with trainingId
+    for (let i = 0; i < empArray.length; i++) {
+      const emp = empArray[i];
+      const {empFName, empOnlyId, plantIds} = emp
+      const last5Digits = empOnlyId
+      const trimmedEmpName = empFName
+
+      const existingEmployee = await Employee.findOne({ employeeId: last5Digits });
+
+      if (existingEmployee) {
+        await Employee.findOneAndUpdate(
+          { employeeId: last5Digits },
+          { $push: { trainingId: trainingId } }
+        );
+      } else {
+        await Employee.create({
+          employeeId: last5Digits,
+          employeeName: trimmedEmpName,
+          trainingId: [trainingId],
+          plantIds: plantIds
+        });
+      }
+    }
+
+    return res;
+  } catch (error) {
+    console.error("Error saving training session:", error);
+    throw new Error("Error saving training session");
   }
-  return res;
-}
+};
+
+
+
+
+
+
 const editTrainingSession = async (id, data) => {
-  console.log("hello", id, data)
+  console.log("hello", id, data);
 
   try {
+    const updatedTraining = await Training.findOneAndUpdate({ _id: id }, { $set: data }, { new: true });
+    console.log("updated", updatedTraining);
 
-    const updatedTraining = await Training.findOneAndUpdate({ _id: id }, { $set: data });
-    console.log("updated", updatedTraining)
+    const empArray = data?.empCodes;
+
+    // Send email to each participant
+    for (let i = 0; i < empArray.length; i++) {
+      const emp = empArray[i];
+      // const [empName, empId] = emp.split(' - ');
+      const participantEmail = data.participantEmails[i]; // Assuming participant emails are in the same order as empCodes
+
+      // Your logic to send email to participant using participantEmail
+      sendEmail(participantEmail, `Training Session Updated`, `The training session details have been updated. New Details: 
+        Training Topic: ${data.projectName}
+        Trainer: ${data.trainerName}
+        Date: ${data.date}
+        From Time: ${data.fromTime}
+        To Time: ${data.toTime}
+        Venue: ${data.plantNames}
+        Description: ${data.meetingDescription}
+        TrainingLink: ${data.trainingLink}
+        `);
+    }
+
     return updatedTraining;
   } catch (error) {
     console.error('Error editing training session:', error);
     throw new Error('Failed to edit training session');
   }
 };
+
 
 
 const deleteTrainingSession = async (id) => {
@@ -185,13 +206,50 @@ const deleteTrainingSession = async (id) => {
   }
 };
 
+// const completeTrainingSession = async (data) => {
+//   try {
+//     if (!data) {
+//       throw new Error("Data is undefined or null");
+//     }
+//     // console.log('first', data)
+//     let meetingId = data._id
+//     delete data._id;
+
+//     data.allEmployees = data?.allEmployees?.map(employee => {
+//       if (employee && employee._id) {
+//         delete employee._id;
+//       }
+//       return employee;
+//     });
+//     data.meetingId = meetingId;
+//     let training = await FinalData.findOne({ meetingId })
+//     let finalDataObj;
+//     if (training) {
+//       console.log("updated")
+//       let x=await Training.findOneAndUpdate({ _id: meetingId }, { $set: { completed: true } })
+//       // console.log("aaaa",x)
+//       finalDataObj = await FinalData.findOneAndUpdate({ _id: training.id }, { $set: data }, { new: true })
+//     }
+//     else {
+//       console.log("created")
+//       finalDataObj = new FinalData(data);
+//       training = await finalDataObj.save()
+//     }
+//     sendEmail(training.facultyMail, `Training Session Details`, `http://192.1.81.121:3000/table/${training._id}`)
+//     console.log("Training session completed successfully:", finalDataObj, training);
+//   } catch (error) {
+//     console.error("Error completing training session:", error);
+//     throw new Error("Error completing training session");
+//   }
+// };
+
 const completeTrainingSession = async (data) => {
   try {
     if (!data) {
       throw new Error("Data is undefined or null");
     }
-    // console.log('first', data)
-    let meetingId = data._id
+    
+    let meetingId = data._id;
     delete data._id;
 
     data.allEmployees = data?.allEmployees?.map(employee => {
@@ -200,27 +258,30 @@ const completeTrainingSession = async (data) => {
       }
       return employee;
     });
+
     data.meetingId = meetingId;
-    let training = await FinalData.findOne({ meetingId })
+    let training = await FinalData.findOne({ meetingId });
     let finalDataObj;
     if (training) {
-      console.log("updated")
-      let x=await Training.findOneAndUpdate({ _id: meetingId }, { $set: { completed: true } })
-      // console.log("aaaa",x)
-      finalDataObj = await FinalData.findOneAndUpdate({ _id: training.id }, { $set: data }, { new: true })
-    }
-    else {
-      console.log("created")
+      console.log("updated");
+      await Training.findOneAndUpdate({ _id: meetingId }, { $set: { completed: true } });
+      finalDataObj = await FinalData.findOneAndUpdate({ _id: training.id }, { $set: data }, { new: true });
+    } else {
+      console.log("created");
       finalDataObj = new FinalData(data);
-      training = await finalDataObj.save()
+      training = await finalDataObj.save();
     }
-    sendEmail(training.facultyMail, `Training Session Details`, `http://192.1.81.101:3000/table/${training._id}`)
+    sendEmail(training.facultyMail, `Training Session Details`, `http://192.1.81.121:3000/table/${training._id}`);
     console.log("Training session completed successfully:", finalDataObj, training);
   } catch (error) {
     console.error("Error completing training session:", error);
     throw new Error("Error completing training session");
   }
 };
+
+
+
+
 
 
 const getFinalTrainingSession = async (filter) => {

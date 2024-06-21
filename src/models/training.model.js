@@ -1,5 +1,24 @@
+
+
+
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+
+const empCodeSchema = new Schema({
+  empOnlyId: {
+    type: String,
+    required: true,
+  },
+  empFName: {
+    type: String,
+    required: true,
+  },
+  plantIds: {
+    type: String,
+    // required: true,
+  }
+  
+});
 
 const trainingSchema = new Schema({
   projectName: {
@@ -22,36 +41,54 @@ const trainingSchema = new Schema({
     type: String,
     required: true,
   },
-  facultyMail: { // New field for faculty email
+  facultyMail: { 
+    type: String,
+    required: true,
+    match: /.+\@.+\..+/,
+  },
+  meetingDescription: { 
     type: String,
     required: true,
   },
-  meetingDescription: { // New field for meeting description
-    type: String,
+  plantNames: {
+    type: [String],
     required: true,
   },
-  plantName: {
-    type: String,
+  plantIds: {
+    type: [String],
     required: true,
   },
-  plantId: {
-    type: String,
-    required: true,
-  },
-  
   empCodes: {
-    type: Array,
+    type: [empCodeSchema],
     required: true,
   },
-  acknowledgement:{
-    type:Boolean,
-    default:false
+  acknowledgement: {
+    type: Boolean,
+    default: false,
   },
-  completed:{
-    type : Boolean ,
-    default:false
-  }
+  completed: {
+    type: Boolean,
+    default: false,
+  },
+  participantEmails: {
+    type: [String],
+    // required: true,
+    validate: [arrayLimit, '{PATH} exceeds the limit of 50'],
+    match: /.+\@.+\..+/,
+  },
+  trainingLink:{
+    type: String,
+
+  },
+  // endTraining: {
+  //   type: String,
+  //   required: true,
+  // },
 });
+
+function arrayLimit(val) {
+  return val.length <= 50;
+}
 
 const TrainingModel = mongoose.model('Training', trainingSchema);
 

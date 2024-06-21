@@ -13,6 +13,10 @@ const employeeSchema = mongoose.Schema(
     type: String,
     required: true
    },
+   plantIds:{
+    type: Number,
+    required: true
+   },
   trainingId:{
     type:[mongoose.Schema.Types.ObjectId],
     ref:'Training'
