@@ -1,10 +1,6 @@
-
-
-
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// Define the schema for timeInfo objects
 const timeInfoSchema = new Schema({
   time: {
     type: Date,
@@ -12,7 +8,6 @@ const timeInfoSchema = new Schema({
   },
 });
 
-// Define the main training session schema
 const trainingSchema = new Schema({
   projectName: {
     type: String,
@@ -73,11 +68,11 @@ const trainingSchema = new Schema({
         required: true,
       },
       department: {
-        type: [String], // Assuming department is an array of strings
+        type: [String], 
         required: true,
       },
       timeInfo: {
-        type: [timeInfoSchema], // Array of timeInfo objects
+        type: [timeInfoSchema], 
         required: true,
       },
       

@@ -1,6 +1,3 @@
-
-
-
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -80,10 +77,7 @@ const trainingSchema = new Schema({
     type: String,
 
   },
-  // endTraining: {
-  //   type: String,
-  //   required: true,
-  // },
+ 
 });
 
 function arrayLimit(val) {

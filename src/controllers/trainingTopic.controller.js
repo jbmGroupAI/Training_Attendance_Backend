@@ -1,6 +1,7 @@
-const trainingTopicService = require('../services/trainingTopicService');
-
-async function getAllTopics(req, res) {
+const trainingTopicService = require('../services/trainingTopic.service');
+const httpStatus = require('http-status');
+const catchAsync = require('../utils/catchAsync');
+async function getTopics(req, res) {
     try {
         const topics = await trainingTopicService.getAllTopics();
         res.json(topics);
@@ -11,14 +12,16 @@ async function getAllTopics(req, res) {
 
 async function createTopic(req, res) {
     try {
+        console.log(req.body)
         const topic = await trainingTopicService.createTopic(req.body);
         res.status(201).json(topic);
     } catch (error) {
+        console.log(error.message)
         res.status(400).json({ message: error.message });
     }
 }
 
 module.exports = {
-    getAllTopics,
+    getTopics,
     createTopic
 };

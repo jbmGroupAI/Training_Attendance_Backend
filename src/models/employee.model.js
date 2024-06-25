@@ -27,7 +27,6 @@ const employeeSchema = mongoose.Schema(
   }
 );
 
-// add plugin that converts mongoose to json
 employeeSchema.plugin(toJSON);
 
 

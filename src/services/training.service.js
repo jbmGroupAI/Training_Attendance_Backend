@@ -101,17 +101,14 @@ const saveTrainingSession = async (data) => {
     const trainingObj = new Training({ ...data });
     const empArray = data?.empCodes;
 
-    // Save the training session
     let res = await trainingObj.save();
     console.log("xcvbnm,", empArray);
 
     const trainingId = res._id;
 
-    // Send email to each participant
     for (let i = 0; i < empArray.length; i++) {
-      const participantEmail = data.participantEmails[i]; // Assuming participant emails are in the same order as empCodes
-      // Your logic to send email to participant using participantEmail
-       sendEmail(participantEmail, `Training Session Created`, `You have been invited to a training session. Details: 
+      const participantEmail = data.participantEmails[i];
+      sendEmail(participantEmail, `Training Session Created`, `You have been invited to a training session. Details: 
         Training Topic: ${data.projectName}
         Trainer: ${data.trainerName}
         Date: ${data.date}
@@ -122,10 +119,9 @@ const saveTrainingSession = async (data) => {
         TrainingLink: ${data.trainingLink}
        `);
     }
-    // Update Employee collection with trainingId
     for (let i = 0; i < empArray.length; i++) {
       const emp = empArray[i];
-      const {empFName, empOnlyId, plantIds} = emp
+      const { empFName, empOnlyId, plantIds } = emp
       const last5Digits = empOnlyId
       const trimmedEmpName = empFName
 
@@ -167,13 +163,10 @@ const editTrainingSession = async (id, data) => {
 
     const empArray = data?.empCodes;
 
-    // Send email to each participant
     for (let i = 0; i < empArray.length; i++) {
       const emp = empArray[i];
-      // const [empName, empId] = emp.split(' - ');
       const participantEmail = data.participantEmails[i]; // Assuming participant emails are in the same order as empCodes
 
-      // Your logic to send email to participant using participantEmail
       sendEmail(participantEmail, `Training Session Updated`, `The training session details have been updated. New Details: 
         Training Topic: ${data.projectName}
         Trainer: ${data.trainerName}
@@ -206,49 +199,12 @@ const deleteTrainingSession = async (id) => {
   }
 };
 
-// const completeTrainingSession = async (data) => {
-//   try {
-//     if (!data) {
-//       throw new Error("Data is undefined or null");
-//     }
-//     // console.log('first', data)
-//     let meetingId = data._id
-//     delete data._id;
-
-//     data.allEmployees = data?.allEmployees?.map(employee => {
-//       if (employee && employee._id) {
-//         delete employee._id;
-//       }
-//       return employee;
-//     });
-//     data.meetingId = meetingId;
-//     let training = await FinalData.findOne({ meetingId })
-//     let finalDataObj;
-//     if (training) {
-//       console.log("updated")
-//       let x=await Training.findOneAndUpdate({ _id: meetingId }, { $set: { completed: true } })
-//       // console.log("aaaa",x)
-//       finalDataObj = await FinalData.findOneAndUpdate({ _id: training.id }, { $set: data }, { new: true })
-//     }
-//     else {
-//       console.log("created")
-//       finalDataObj = new FinalData(data);
-//       training = await finalDataObj.save()
-//     }
-//     sendEmail(training.facultyMail, `Training Session Details`, `http://192.1.81.121:3000/table/${training._id}`)
-//     console.log("Training session completed successfully:", finalDataObj, training);
-//   } catch (error) {
-//     console.error("Error completing training session:", error);
-//     throw new Error("Error completing training session");
-//   }
-// };
-
 const completeTrainingSession = async (data) => {
   try {
     if (!data) {
       throw new Error("Data is undefined or null");
     }
-    
+
     let meetingId = data._id;
     delete data._id;
 
@@ -271,18 +227,13 @@ const completeTrainingSession = async (data) => {
       finalDataObj = new FinalData(data);
       training = await finalDataObj.save();
     }
-    sendEmail(training.facultyMail, `Training Session Details`, `http://192.1.81.121:3000/table/${training._id}`);
+    sendEmail(training.facultyMail, `Training Session Details`, `http://192.1.81.146:3000/table/${training._id}`);
     console.log("Training session completed successfully:", finalDataObj, training);
   } catch (error) {
     console.error("Error completing training session:", error);
     throw new Error("Error completing training session");
   }
 };
-
-
-
-
-
 
 const getFinalTrainingSession = async (filter) => {
   try {
