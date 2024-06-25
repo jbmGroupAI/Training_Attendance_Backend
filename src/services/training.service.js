@@ -227,7 +227,7 @@ const completeTrainingSession = async (data) => {
       finalDataObj = new FinalData(data);
       training = await finalDataObj.save();
     }
-    sendEmail(training.facultyMail, `Training Session Details`, `http://192.1.81.146:3000/table/${training._id}`);
+    sendEmail(training.facultyMail, `Training Session Details`, `http://35.154.18.252:3000/table/${training._id}`);
     console.log("Training session completed successfully:", finalDataObj, training);
   } catch (error) {
     console.error("Error completing training session:", error);
