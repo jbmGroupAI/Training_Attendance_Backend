@@ -5,6 +5,7 @@ const { tokenTypes } = require('../config/tokens');
 const Training = require('../models/training.model')
 const FinalData = require('../models/finalTrainingData.model')
 const { sendEmail } = require('./email.service')
+const moment = require('moment')
 
 
 
@@ -23,48 +24,95 @@ const calculateMeetingDuration = (fromTime, toTime) => {
   return `${hours}h ${minutes}m`;
 };
 
+// const meetingStatus = async (row) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       let training = await Training.findOne({ _id: row._id });
+//       if (training?.acknowledgement === true) {
+//         resolve("Completed");
+//       } else {
+//         const currentTime = new Date();
+//         const meetingStartDate = new Date(row.date);
+//         const meetingStartTimeParts = row.fromTime.split(":");
+//         meetingStartDate.setHours(
+//           parseInt(meetingStartTimeParts[0]),
+//           parseInt(meetingStartTimeParts[1]),
+//           0,
+//           0
+//         );
+
+//         const meetingEndDate = new Date(row.date);
+//         const meetingEndTimeParts = row.toTime.split(":");
+//         meetingEndDate.setHours(
+//           parseInt(meetingEndTimeParts[0]),
+//           parseInt(meetingEndTimeParts[1]),
+//           0,
+//           0
+//         );
+
+//         if (currentTime > meetingEndDate) {
+//           resolve("Completed");
+//         } else if (currentTime >= meetingStartDate) {
+//           resolve("Running");
+//         } else {
+//           resolve("Not Started");
+//         }
+//       }
+//     } catch (error) {
+//       reject(error);
+//     }
+//   });
+// };
+
 const meetingStatus = async (row) => {
+  console.log("first")
   return new Promise(async (resolve, reject) => {
     try {
-      let training = await Training.findOne({ _id: row._id });
+      const training = await Training.findOne({ _id: row._id });
+
       if (training?.acknowledgement === true) {
         resolve("Completed");
+        return;
+      }
+
+      const currentTime = new Date();
+      const meetingDate = new Date(row.date);
+
+      const [startHour, startMinute] = row.fromTime.split(":").map(Number);
+      const meetingStartDate = new Date(meetingDate);
+      meetingStartDate.setHours(startHour, startMinute, 0, 0);
+
+      const [endHour, endMinute] = row.toTime.split(":").map(Number);
+      const meetingEndDate = new Date(meetingDate);
+      meetingEndDate.setHours(endHour, endMinute, 0, 0);
+
+      console.log("Current Time:", currentTime.toString());
+      console.log("Meeting Start Date:", meetingStartDate.toString());
+      console.log("Meeting End Date:", meetingEndDate.toString());
+   console.log("ddd",{currentTime,meetingStartDate,meetingEndDate})
+   console.log("copm ",new Date(currentTime).getTime() > new Date(meetingEndDate).getTime())
+   const cT = moment(currentTime).valueOf();
+   const sT = moment(meetingStartDate).valueOf();
+   const eT = moment(meetingEndDate).valueOf();
+   console.log("running",cT >= eT && cT <= sT ,{cT,eT,sT})
+      if (cT > eT) {
+        resolve("Completed");
+      } else if ( cT >= sT && cT <= eT ) {
+        resolve("In Progress");
       } else {
-        const currentTime = new Date();
-        const meetingStartDate = new Date(row.date);
-        const meetingStartTimeParts = row.fromTime.split(":");
-        meetingStartDate.setHours(
-          parseInt(meetingStartTimeParts[0]),
-          parseInt(meetingStartTimeParts[1]),
-          0,
-          0
-        );
-
-        const meetingEndDate = new Date(row.date);
-        const meetingEndTimeParts = row.toTime.split(":");
-        meetingEndDate.setHours(
-          parseInt(meetingEndTimeParts[0]),
-          parseInt(meetingEndTimeParts[1]),
-          0,
-          0
-        );
-
-        if (currentTime > meetingEndDate) {
-          resolve("Completed");
-        } else if (currentTime >= meetingStartDate) {
-          resolve("Running");
-        } else {
-          resolve("Not Started");
-        }
+        resolve("Not Started");
       }
     } catch (error) {
+      console.error("Error in meetingStatus function:", error);
       reject(error);
     }
   });
 };
 
 
+
 const getTrainingSession = async (startDateTime, endDateTime) => {
+  console.log("check1")
   try {
     const filter = { date: { $gte: startDateTime, $lte: endDateTime } }
     const filteredSessions = await Training.find({
@@ -72,6 +120,8 @@ const getTrainingSession = async (startDateTime, endDateTime) => {
     });
     let res = [];
     for (let i = 0; i < filteredSessions.length; i++) {
+      console.log("check2")
+
       let resp = filteredSessions[i].toObject();
       resp.totalMeetingTime = calculateMeetingDuration(resp.fromTime, resp.toTime);
       resp.status = await meetingStatus(resp);
