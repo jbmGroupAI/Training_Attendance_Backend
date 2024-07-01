@@ -19,9 +19,15 @@ if (config.env !== 'test') {
  * @returns {Promise}
  */
 const sendEmail = async (to, subject, text) => {
-  console.log("mail sent to", to, subject, text)
-  const msg = { from: config.email.from, to, subject, text };
-  await transport.sendMail(msg);
+  try {
+    console.log("mail sent to", to, subject, text)
+    const msg = { from: config.email.from, to, subject, text };
+    await transport.sendMail(msg);
+  }
+  catch (err) {
+    console.log("error in sending mail", err.message)
+  }
+
 };
 
 /**

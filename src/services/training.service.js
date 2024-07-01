@@ -24,45 +24,6 @@ const calculateMeetingDuration = (fromTime, toTime) => {
   return `${hours}h ${minutes}m`;
 };
 
-// const meetingStatus = async (row) => {
-//   return new Promise(async (resolve, reject) => {
-//     try {
-//       let training = await Training.findOne({ _id: row._id });
-//       if (training?.acknowledgement === true) {
-//         resolve("Completed");
-//       } else {
-//         const currentTime = new Date();
-//         const meetingStartDate = new Date(row.date);
-//         const meetingStartTimeParts = row.fromTime.split(":");
-//         meetingStartDate.setHours(
-//           parseInt(meetingStartTimeParts[0]),
-//           parseInt(meetingStartTimeParts[1]),
-//           0,
-//           0
-//         );
-
-//         const meetingEndDate = new Date(row.date);
-//         const meetingEndTimeParts = row.toTime.split(":");
-//         meetingEndDate.setHours(
-//           parseInt(meetingEndTimeParts[0]),
-//           parseInt(meetingEndTimeParts[1]),
-//           0,
-//           0
-//         );
-
-//         if (currentTime > meetingEndDate) {
-//           resolve("Completed");
-//         } else if (currentTime >= meetingStartDate) {
-//           resolve("Running");
-//         } else {
-//           resolve("Not Started");
-//         }
-//       }
-//     } catch (error) {
-//       reject(error);
-//     }
-//   });
-// };
 
 const meetingStatus = async (row) => {
   console.log("first")
@@ -92,8 +53,8 @@ const meetingStatus = async (row) => {
    console.log("ddd",{currentTime,meetingStartDate,meetingEndDate})
    console.log("copm ",new Date(currentTime).getTime() > new Date(meetingEndDate).getTime())
    const cT = moment(currentTime).valueOf();
-   const sT = moment(meetingStartDate).valueOf();
-   const eT = moment(meetingEndDate).valueOf();
+const sT = moment(meetingStartDate).subtract(330, 'minutes').valueOf();
+const eT = moment(meetingEndDate).subtract(330, 'minutes').valueOf();
    console.log("running",cT >= eT && cT <= sT ,{cT,eT,sT})
       if (cT > eT) {
         resolve("Completed");
@@ -208,7 +169,7 @@ const editTrainingSession = async (id, data) => {
   console.log("hello", id, data);
 
   try {
-    const updatedTraining = await Training.findOneAndUpdate({ _id: id }, { $set: data }, { new: true });
+    const updatedTraining = await Training.findOneAndUpdate({ _id: id }, { $set: {...data} }, { new: true });
     console.log("updated", updatedTraining);
 
     const empArray = data?.empCodes;
@@ -296,21 +257,49 @@ const getFinalTrainingSession = async (filter) => {
 
 };
 
+// const acknowledge = async (data, id) => {
+//   try {
+//     data.acknowledgement = true;
+//     const training = await Training.findOneAndUpdate({ _id: data.meetingId }, { $set: { acknowledgement: true } })
+//     const trainingSessions = await FinalData.findOneAndUpdate({
+//       _id: id
+//     }, { $set: data });
+//     console.log("kjhgfd", trainingSessions)
+//     return trainingSessions;
+//   } catch (error) {
+//     console.error(error);
+//     throw new Error('Error retrieving training sessions by date range');
+//   }
+
+// };
+
 const acknowledge = async (data, id) => {
   try {
+    // Check if the meeting has already been acknowledged
+    const existingAcknowledgement = await Training.findOne({ _id: data.meetingId, acknowledgement: true });
+
+    if (existingAcknowledgement) {
+      throw new Error('This meeting has already been acknowledged.');
+    }
+
+    // Set acknowledgement to true
     data.acknowledgement = true;
-    const training = await Training.findOneAndUpdate({ _id: data.meetingId }, { $set: { acknowledgement: true } })
-    const trainingSessions = await FinalData.findOneAndUpdate({
-      _id: id
-    }, { $set: data });
-    console.log("kjhgfd", trainingSessions)
+
+    // Update the Training collection
+    const training = await Training.findOneAndUpdate({ _id: data.meetingId }, { $set: { acknowledgement: true } });
+
+    // Update the FinalData collection
+    const trainingSessions = await FinalData.findOneAndUpdate({ _id: id }, { $set: data });
+
+    console.log("kjhgfd", trainingSessions);
+
     return trainingSessions;
   } catch (error) {
     console.error(error);
-    throw new Error('Error retrieving training sessions by date range');
+    throw new Error('Error processing acknowledgement');
   }
-
 };
+
 
 module.exports = {
   getTrainingSession,
