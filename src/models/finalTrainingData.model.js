@@ -45,6 +45,14 @@ const trainingSchema = new Schema({
     type: Array,
     required: true,
   },
+  venue: {
+    type: String,
+    required: true,
+  },
+  venueId: {
+    type: String,
+    required: true,
+  },
   empCodes: {
     type: Array,
     required: true,

@@ -6,6 +6,7 @@ const trainingRoute = require('./trainingSession.route')
 const trainingTopicRoute = require('./trainingTopic.route')
 const config = require('../../config/config');
 const employeeRoute = require('./employee.route')
+const adminRoute=require('./admin.route')
 
 const router = express.Router();
 
@@ -27,8 +28,12 @@ const defaultRoutes = [
     route: employeeRoute
   },
   {
-    path: '/',
+    path: '/topics',
     route: trainingTopicRoute
+  },
+  {
+    path: '/',
+    route: adminRoute
   }
 ];
 

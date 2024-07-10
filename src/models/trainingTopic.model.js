@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const topicSchema = new Schema({
-  name: {
+  trainingTopic: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   }
 });
 
