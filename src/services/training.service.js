@@ -218,6 +218,8 @@ const completeTrainingSession = async (data) => {
 
     let meetingId = data._id;
     delete data._id;
+    const empArray = data?.empCodes;
+    
 
     data.allEmployees = data?.allEmployees?.map(employee => {
       if (employee && employee._id) {
@@ -233,10 +235,27 @@ const completeTrainingSession = async (data) => {
       console.log("updated");
       await Training.findOneAndUpdate({ _id: meetingId }, { $set: { completed: true } });
       finalDataObj = await FinalData.findOneAndUpdate({ _id: training.id }, { $set: data }, { new: true });
+     
     } else {
       console.log("created");
       finalDataObj = new FinalData(data);
       training = await finalDataObj.save();
+    }
+    for (let i = 0; i < empArray.length; i++) {
+      const emp = empArray[i];
+      const { empFName, empOnlyId, plantIds } = emp
+      const last5Digits = empOnlyId
+      const trimmedEmpName = empFName
+
+      const existingEmployee = await Employee.findOne({ employeeId: last5Digits });
+      console.log("vbnm,.", finalDataObj)
+      if (existingEmployee) {
+        await Employee.findOneAndUpdate(
+          { employeeId: last5Digits },
+          { $addToSet: { finalTrainingId: finalDataObj._id } }
+        );
+      }
+      
     }
     sendEmail(training.facultyMail, `Training Session Details`, `http://35.154.18.252/ta/table/${training._id}`);
     console.log("Training session completed successfully:", finalDataObj, training);
@@ -284,7 +303,6 @@ const acknowledge = async (data, id) => {
 
     // Set acknowledgement to true
     data.acknowledgement = true;
-
     // Update the Training collection
     const training = await Training.findOneAndUpdate({ _id: data.meetingId }, { $set: { acknowledgement: true } });
 

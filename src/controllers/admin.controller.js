@@ -41,15 +41,26 @@ exports.getAllAdminDetails = async (req, res) => {
 };
 
 // Create a new training
+
 exports.createAllAdminDetails = async (req, res) => {
   try {
     const newAdmin = new Admin(req.body);
     const savedAdmin = await newAdmin.save();
     res.status(201).json(savedAdmin);
   } catch (error) {
-    res.status(500).json({ error: 'This venue id already has a legal code' });
+    if (error.code === 11000) {
+      // Duplicate key error
+      const duplicateKey = Object.keys(error.keyValue)[0];
+      const duplicateValue = error.keyValue[duplicateKey];
+      const errorMessage = `A training session with this ${duplicateKey} (${duplicateValue}) already exists.`;
+      res.status(400).json({ error: errorMessage });
+    } else {
+      console.error("Error creating admin details:", error);
+      res.status(500).json({ error: 'An error occurred while creating admin details.' });
+    }
   }
 };
+
 
 // Update a training
 exports.updateAdminDetail = async (req, res) => {

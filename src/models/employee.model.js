@@ -20,6 +20,10 @@ const employeeSchema = mongoose.Schema(
   trainingId:{
     type:[mongoose.Schema.Types.ObjectId],
     ref:'Training'
+  },
+  finalTrainingId:{
+    type:[mongoose.Schema.Types.ObjectId],
+    ref:'FinalData'
   }
   },
   {

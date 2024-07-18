@@ -21,6 +21,23 @@ const getAllAdminDetails = async () => {
 //   }
 // };
 
+// const createAllAdminDetails = async (trainingData) => {
+//   try {
+//     const newTraining = new AdminModel(trainingData);
+//     return await newTraining.save();
+//   } catch (error) {
+//     if (error.code === 11000) {
+//       // Duplicate key error
+//       console.error("Duplicate venueId error:", error);
+//       throw new Error("A training session with this venueId already exists.");
+//     } else {
+//       console.error("Error creating training:", error);
+//       throw error;
+//     }
+//   }
+// };
+
+
 const createAllAdminDetails = async (trainingData) => {
   try {
     const newTraining = new AdminModel(trainingData);
@@ -28,14 +45,17 @@ const createAllAdminDetails = async (trainingData) => {
   } catch (error) {
     if (error.code === 11000) {
       // Duplicate key error
-      console.error("Duplicate venueId error:", error);
-      throw new Error("A training session with this venueId already exists.");
+      const duplicateKey = Object.keys(error.keyValue)[0];
+      const duplicateValue = error.keyValue[duplicateKey];
+      console.error(`Duplicate ${duplicateKey} error:`, error);
+      throw new Error(`A training session with this ${duplicateKey} (${duplicateValue}) already exists.`);
     } else {
       console.error("Error creating training:", error);
       throw error;
     }
   }
 };
+
 
 
 module.exports = {

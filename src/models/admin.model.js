@@ -18,6 +18,7 @@ const adminSchema = new Schema({
   legalCode: {
     type: String,
     required: true,
+    unique: true,
   },
  
 });
